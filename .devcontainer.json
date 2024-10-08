@@ -1,0 +1,36 @@
+{
+    "name": "CCTV",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "target": "dev"
+    },
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "editor.quickSuggestions": {
+                    "other": "on",
+                    "comments": "off",
+                    "strings": "on"
+                },
+                "editor.occurrencesHighlight": "off",
+                "editor.guides.bracketPairs": true,
+                "editor.guides.bracketPairsHorizontal": false,
+                "editor.bracketPairColorization.enabled": true,
+                "explorer.sortOrder": "type",
+                "terminal.integrated.cursorStyle": "line",
+                "dotnet.defaultSolution": "disable",
+                "dotnet.server.useOmnisharp": false,
+                "dotnet.codeLens.enableReferencesCodeLens": false
+            },
+            "extensions": [
+                "ms-azuretools.vscode-docker",
+                "humao.rest-client"
+            ]
+        }
+    },
+    "runArgs": ["--env-file", ".env"],
+    "initializeCommand": ["./init.sh"],
+    "postCreateCommand": "sudo chown vscode:vscode ~/.nuget",
+    "postStartCommand": "dotnet restore",
+    "mounts": ["type=bind,source=${localEnv:HOME}/.devcache/.nuget/packages,target=/home/vscode/.nuget/packages"]
+}
