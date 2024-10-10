@@ -2,6 +2,9 @@
 ca/
 ignore
 
+## vscode
+.vscode/
+
 ## .NET
 project.lock.json
 project.fragment.lock.json
