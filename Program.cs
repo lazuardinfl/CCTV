@@ -7,9 +7,10 @@ public class Program
     public static void Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        var services = builder.Services;
 
-        builder.Services.AddKeycloakWebApiAuthentication(builder.Configuration);
-        builder.Services.AddAuthorization();
+        services.AddKeycloakWebApiAuthentication(builder.Configuration);
+        services.AddAuthorization();
 
         var app = builder.Build();
 
