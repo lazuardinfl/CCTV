@@ -1,4 +1,4 @@
-@accessToken={{login.response.body.$.access_token}}
+@accessToken={{refresh.response.body.$.access_token}}
 
 ### Get access token
 # @name login
@@ -11,6 +11,16 @@ client_id={{$dotenv KEYCLOAK_CLIENT_ID}}
 &username={{$dotenv KEYCLOAK_USERNAME}}
 &password={{$dotenv KEYCLOAK_PASSWORD}}
 &scope=roles
+
+### Refresh token
+# @name refresh
+POST {{$dotenv KEYCLOAK_URL}}/realms/{{$dotenv KEYCLOAK_REALM}}/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+client_id={{$dotenv KEYCLOAK_CLIENT_ID}}
+&client_secret={{$dotenv KEYCLOAK_CLIENT_SECRET}}
+&grant_type=refresh_token
+&refresh_token={{login.response.body.$.refresh_token}}
 
 ### Example
 GET http://localhost:8080/
