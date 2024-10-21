@@ -5,9 +5,9 @@ namespace CCTV.ControllerS;
 
 [ApiController]
 [Route("api/[controller]")]
-public class StreamController : ControllerBase
+public class AuthController : ControllerBase
 {
     [HttpGet("{id}")]
-    [Authorize(Roles = "admin")]
+    [Authorize(Policy = "Stream")]
     public string Get(string id) => id;
 }
