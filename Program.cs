@@ -26,10 +26,16 @@ public class Program
                 options.RolesResource = configuration.GetKeycloakOptions<KeycloakInstallationOptions>()?.Resource;
             })
             .AddAuthorizationBuilder()
+            .AddPolicy("Admin", policy => policy.RequireRole("super"))
             .AddPolicy("Stream", policy => {
-                policy.AddRequirements(new StreamRequirement());
+                policy.AddRequirements(new StreamRequirement("src", ["super"]));
+            })
+            .AddPolicy("Snapshot", policy => {
+                policy.AddRequirements(new StreamRequirement("src", ["super"]));
             });
         services.AddControllers();
+        services.AddReverseProxy()
+            .LoadFromConfig(configuration.GetSection("ReverseProxy"));
         services.AddSingleton<IAuthorizationHandler, StreamHandler>();
 
         var app = builder.Build();
@@ -37,8 +43,9 @@ public class Program
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();
+        app.MapReverseProxy();
 
-        app.MapGet("/", () => "Hello World!").RequireAuthorization();
+        app.MapGet("/hello", () => "Hello World!").RequireAuthorization();
 
         app.Run();
     }

@@ -3,8 +3,10 @@ using Microsoft.AspNetCore.Http.Extensions;
 
 namespace CCTV.Authorization;
 
-public class StreamRequirement : IAuthorizationRequirement
+public class StreamRequirement(string targetQuery, string[]? additionalRoles = null) : IAuthorizationRequirement
 {
+    public string TargetQuery { get; } = targetQuery;
+    public string[] AdditionalRoles { get; } = additionalRoles ?? [];
 }
 
 public class StreamHandler(ILogger<StreamRequirement> logger) : AuthorizationHandler<StreamRequirement>
@@ -13,9 +15,17 @@ public class StreamHandler(ILogger<StreamRequirement> logger) : AuthorizationHan
     {
         if (context.Resource is HttpContext httpContext)
         {
-            logger.LogInformation("URL {url}", httpContext.Request.GetEncodedUrl());
-            logger.LogInformation("ROLE {role}", context.User.IsInRole("stream role"));
-            context.Succeed(requirement);
+            List<string> roles = [.. requirement.AdditionalRoles];
+            roles.Add(httpContext.Request.Query[requirement.TargetQuery].ToString());
+            foreach (string role in roles)
+            {
+                if (context.User.IsInRole(role))
+                {
+                    context.Succeed(requirement);
+                    logger.LogInformation("IS IN ROLE {url}", httpContext.Request.GetEncodedPathAndQuery());
+                    break;
+                }
+            }
         }
         return Task.CompletedTask;
     }
