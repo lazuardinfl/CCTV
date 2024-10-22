@@ -18,5 +18,8 @@ EOF
 # copy custom root CA from default linux ca directory
 \cp /usr/local/share/ca-certificates/* ca/ 2>/dev/null || true
 
-# create cache directory for nuget packages
+# create cache directory for nuget
 mkdir -p ~/.devcache/.nuget/packages
+
+# create cache directory for npm
+mkdir -p ~/.devcache/.npm

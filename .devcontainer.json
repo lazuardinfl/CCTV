@@ -24,13 +24,21 @@
             },
             "extensions": [
                 "ms-azuretools.vscode-docker",
+                "svelte.svelte-vscode",
                 "humao.rest-client"
             ]
         }
     },
+    "features": {
+        "ghcr.io/devcontainers/features/node:1": {
+            "version": "lts"
+        }
+    },
     "runArgs": ["--env-file", ".env"],
     "initializeCommand": ["./init.sh"],
-    "postCreateCommand": "sudo chown vscode:vscode ~/.nuget && dotnet dev-certs https",
-    "postStartCommand": "dotnet restore",
-    "mounts": ["type=bind,source=${localEnv:HOME}/.devcache/.nuget/packages,target=/home/vscode/.nuget/packages"]
+    "postCreateCommand": "sudo chown vscode:vscode ~/.nuget && dotnet dev-certs https && dotnet restore",
+    "mounts": [
+        "type=bind,source=${localEnv:HOME}/.devcache/.nuget/packages,target=/home/vscode/.nuget/packages",
+        "type=bind,source=${localEnv:HOME}/.devcache/.npm,target=/home/vscode/.npm"
+    ]
 }
