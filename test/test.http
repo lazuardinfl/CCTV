@@ -25,3 +25,7 @@ client_id={{$dotenv KEYCLOAK_CLIENT_ID}}
 ### Example
 GET http://localhost:8080/
 Authorization: Bearer {{accessToken}}
+
+###
+GET http://localhost:8080/api/frame.jpeg?src=cctvId
+Authorization: Bearer {{accessToken}}

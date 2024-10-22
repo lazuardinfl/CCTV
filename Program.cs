@@ -28,10 +28,7 @@ public class Program
             .AddAuthorizationBuilder()
             .AddPolicy("Admin", policy => policy.RequireRole("super"))
             .AddPolicy("Stream", policy => {
-                policy.AddRequirements(new StreamRequirement("src", ["super"]));
-            })
-            .AddPolicy("Snapshot", policy => {
-                policy.AddRequirements(new StreamRequirement("src", ["super"]));
+                policy.AddRequirements(new StreamRequirement("src", ["super", "viewer"]));
             });
         services.AddControllers();
         services.AddReverseProxy()
@@ -44,8 +41,6 @@ public class Program
         app.UseAuthorization();
         app.MapControllers();
         app.MapReverseProxy();
-
-        app.MapGet("/hello", () => "Hello World!").RequireAuthorization();
 
         app.Run();
     }
