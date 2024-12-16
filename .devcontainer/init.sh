@@ -4,8 +4,8 @@
 # must exist to prevent container build error
 
 # create .env file if not exist
-if [ ! -f .env ]; then
-    touch .env
+if [ ! -f .devcontainer/.env ]; then
+    touch .devcontainer/.env
 fi
 
 # create ca directory and one file if not exist

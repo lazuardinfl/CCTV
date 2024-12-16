@@ -1,7 +1,8 @@
 {
     "name": "CCTV",
     "build": {
-        "dockerfile": "Dockerfile",
+        "dockerfile": "../Dockerfile",
+        "context": "..",
         "target": "dev"
     },
     "customizations": {
@@ -35,9 +36,9 @@
             "version": "20"
         }
     },
-    "runArgs": ["--env-file", ".env"],
-    "initializeCommand": ["./init.sh"],
-    "postCreateCommand": "sudo chown vscode:vscode ~/.nuget && dotnet dev-certs https && dotnet restore && cd ClientApp && npm install",
+    "runArgs": ["--env-file", ".devcontainer/.env"],
+    "initializeCommand": [".devcontainer/init.sh"],
+    "postCreateCommand": [".devcontainer/postCreate.sh"],
     "mounts": [
         "type=bind,source=${localEnv:HOME}/.devcache/.nuget/packages,target=/home/vscode/.nuget/packages",
         "type=bind,source=${localEnv:HOME}/.devcache/.npm,target=/home/vscode/.npm"
