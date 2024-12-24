@@ -1,4 +1,5 @@
 using CCTV.Authorization;
+using CCTV.Services;
 using Keycloak.AuthServices.Authentication;
 using Keycloak.AuthServices.Authorization;
 using Keycloak.AuthServices.Common;
@@ -18,7 +19,7 @@ public class Program
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddKeycloakWebApi(options => {
                 configuration.BindKeycloakOptions(options);
-                options.AuthServerUrl = configuration.GetValue<string>("KEYCLOAK_URL") ?? options.AuthServerUrl;
+                options.AuthServerUrl = configuration["KEYCLOAK_URL"] ?? options.AuthServerUrl;
             });
         services.AddAuthorization()
             .AddKeycloakAuthorization(options => {
@@ -34,6 +35,7 @@ public class Program
         services.AddReverseProxy()
             .LoadFromConfig(configuration.GetSection("ReverseProxy"));
         services.AddSingleton<IAuthorizationHandler, StreamHandler>();
+        services.AddSingleton<StreamToken>();
 
         var app = builder.Build();
 
