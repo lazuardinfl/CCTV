@@ -29,13 +29,17 @@ public class Program
             .AddAuthorizationBuilder()
             .AddPolicy("Admin", policy => policy.RequireRole("super"))
             .AddPolicy("Stream", policy => {
-                policy.AddRequirements(new StreamRequirement("src", ["super", "viewer"]));
+                policy.AddRequirements(new StreamRequirement("src", "token"));
+            })
+            .AddPolicy("StreamRequest", policy => {
+                policy.AddRequirements(new StreamRequestRequirement("src", "duration", ["super", "officer"]));
             });
         services.AddControllers();
         services.AddReverseProxy()
             .LoadFromConfig(configuration.GetSection("ReverseProxy"));
-        services.AddSingleton<IAuthorizationHandler, StreamHandler>();
         services.AddSingleton<StreamToken>();
+        services.AddSingleton<IAuthorizationHandler, StreamHandler>();
+        services.AddSingleton<IAuthorizationHandler, StreamRequestHandler>();
 
         var app = builder.Build();
 

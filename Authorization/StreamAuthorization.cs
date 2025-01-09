@@ -1,30 +1,31 @@
+using CCTV.Services;
 using Microsoft.AspNetCore.Authorization;
 
 namespace CCTV.Authorization;
 
-public class StreamRequirement(string targetQuery, string[]? additionalRoles = null) : IAuthorizationRequirement
+public class StreamRequirement(string cctv, string token) : IAuthorizationRequirement
 {
-    public string TargetQuery { get; } = targetQuery;
-    public string[] AdditionalRoles { get; } = additionalRoles ?? [];
+    public string CCTV { get; } = cctv;
+    public string Token { get; } = token;
 }
 
-public class StreamHandler() : AuthorizationHandler<StreamRequirement>
+public class StreamHandler(StreamToken streamToken) : AuthorizationHandler<StreamRequirement>
 {
-    protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, StreamRequirement requirement)
+    protected override async Task<Task> HandleRequirementAsync(AuthorizationHandlerContext context, StreamRequirement requirement)
     {
-        if (context.Resource is HttpContext httpContext)
+        try
         {
-            List<string> roles = [.. requirement.AdditionalRoles];
-            roles.Add(httpContext.Request.Query[requirement.TargetQuery].ToString());
-            foreach (string role in roles)
+            if (context.Resource is HttpContext httpContext)
             {
-                if (context.User.IsInRole(role))
+                string cctv = httpContext.Request.Query[requirement.CCTV].ToString();
+                string token = httpContext.Request.Query[requirement.Token].ToString();
+                if ((await streamToken.ValidateToken(token)) && (cctv == streamToken.GetTokenClaim(token, requirement.CCTV)))
                 {
                     context.Succeed(requirement);
-                    break;
                 }
             }
         }
+        catch {}
         return Task.CompletedTask;
     }
 }

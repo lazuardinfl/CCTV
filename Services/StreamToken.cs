@@ -12,14 +12,14 @@ public class StreamToken(IConfiguration configuration, ILogger<StreamToken> logg
     private readonly SecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["STREAM_SECRET"] ??
         RandomNumberGenerator.GetString("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", 512)));
 
-    public string GenerateToken(string cctv, DateTime expires)
+    public string GenerateToken(DateTime expires, ClaimsIdentity claims)
     {
         logger.LogInformation("token generated");
         var tokenHandler = new JwtSecurityTokenHandler();
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Expires = expires,
-            Subject = new ClaimsIdentity([new Claim("cctv", cctv)]),
+            Subject = claims,
             SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256)
         };
         return tokenHandler.WriteToken(tokenHandler.CreateToken(tokenDescriptor));
@@ -38,5 +38,19 @@ public class StreamToken(IConfiguration configuration, ILogger<StreamToken> logg
         };
         var result = await tokenHandler.ValidateTokenAsync(token, validationParameters);
         return result.IsValid;
+    }
+
+    public string? GetTokenClaim(string token, string claim)
+    {
+        try
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwt = tokenHandler.ReadJwtToken(token);
+            return jwt.Claims.First(c => c.Type == claim).Value;
+        }
+        catch
+        {
+            return null;
+        }
     }
 }
