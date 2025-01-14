@@ -29,14 +29,18 @@ public class Program
             .AddAuthorizationBuilder()
             .AddPolicy("Admin", policy => policy.RequireRole("super"))
             .AddPolicy("Stream", policy => {
-                policy.AddRequirements(new StreamRequirement("src", "token"));
+                policy.AddRequirements(new StreamRequirement("src", "token", "duration"));
             })
             .AddPolicy("StreamRequest", policy => {
-                policy.AddRequirements(new StreamRequestRequirement("src", "duration", ["super", "officer"]));
+                policy.AddRequirements(new StreamRequestRequirement("src"));
             });
         services.AddControllers();
         services.AddReverseProxy()
             .LoadFromConfig(configuration.GetSection("ReverseProxy"));
+        services.AddRequestTimeouts(options => {
+            options.AddPolicy("StreamNormal", TimeSpan.FromHours(1));
+            options.AddPolicy("StreamExtended", TimeSpan.FromDays(3));
+        });
         services.AddSingleton<StreamToken>();
         services.AddSingleton<IAuthorizationHandler, StreamHandler>();
         services.AddSingleton<IAuthorizationHandler, StreamRequestHandler>();
@@ -45,6 +49,7 @@ public class Program
 
         app.UseAuthentication();
         app.UseAuthorization();
+        app.UseRequestTimeouts();
         app.MapControllers();
         app.MapReverseProxy();
 
