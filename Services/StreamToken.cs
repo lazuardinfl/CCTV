@@ -6,15 +6,13 @@ using System.Text;
 
 namespace CCTV.Services;
 
-public class StreamToken(IConfiguration configuration, ILogger<StreamToken> logger)
+public class StreamToken(IConfiguration configuration)
 {
-    private readonly ILogger logger = logger;
     private readonly SecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["STREAM_SECRET"] ??
         RandomNumberGenerator.GetString("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", 512)));
 
     public string GenerateToken(DateTime expires, ClaimsIdentity claims)
     {
-        logger.LogInformation("token generated");
         var tokenHandler = new JwtSecurityTokenHandler();
         var tokenDescriptor = new SecurityTokenDescriptor
         {
@@ -27,7 +25,6 @@ public class StreamToken(IConfiguration configuration, ILogger<StreamToken> logg
 
     public async Task<bool> ValidateToken(string token)
     {
-        logger.LogInformation("token validated");
         var tokenHandler = new JwtSecurityTokenHandler();
         var validationParameters = new TokenValidationParameters {
             ValidateIssuer = false,

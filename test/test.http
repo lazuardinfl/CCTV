@@ -27,5 +27,8 @@ GET http://localhost:8080/
 Authorization: Bearer {{accessToken}}
 
 ###
-GET http://localhost:8080/api/frame.jpeg?src=cctvId
+POST http://localhost:8080/api/auth/stream/token?src=cctvId&duration=normal
 Authorization: Bearer {{accessToken}}
+
+###
+GET http://localhost:8080/api/stream.mjpeg?src=cctvId&duration=normal&token=jwt
