@@ -32,7 +32,7 @@ public class Program
                 policy.AddRequirements(new StreamRequirement("src", "token", "duration"));
             })
             .AddPolicy("StreamRequest", policy => {
-                policy.AddRequirements(new StreamRequestRequirement("src"));
+                policy.AddRequirements(new StreamRequestRequirement("src", "duration"));
             });
         services.AddControllers();
         services.AddReverseProxy()
