@@ -1,3 +1,4 @@
+import { env } from "$env/dynamic/private";
 import { SvelteKitAuth } from "@auth/sveltekit";
 import Keycloak from "@auth/sveltekit/providers/keycloak";
 
@@ -8,7 +9,7 @@ declare module "@auth/core/jwt" {
 }
 
 export const { handle, signIn, signOut } = SvelteKitAuth({
-    debug: true,
+    debug: env.NODE_ENV !== "production",
     trustHost: true,
     providers: [Keycloak],
     callbacks: {

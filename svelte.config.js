@@ -1,5 +1,8 @@
-import adapter from '@sveltejs/adapter-auto';
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import adapter from "@sveltejs/adapter-node";
+import { vitePreprocess } from "@sveltejs/vite-plugin-svelte";
+import { loadEnv } from "vite";
+
+const env = loadEnv(process.env.NODE_ENV ?? "development", process.cwd(), "SVELTE_");
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
@@ -27,7 +30,7 @@ const config = {
 			errorTemplate: "ClientApp/error.html"
 		},
 		paths: {
-			base: "/web"
+			base: env.SVELTE_PATH_BASE ?? ""
 		}
 	}
 };

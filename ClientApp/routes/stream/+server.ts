@@ -17,7 +17,7 @@ export const POST: RequestHandler = async ({ cookies, fetch, request }) => {
         "src": formData.get("src")?.toString() ?? "",
         "duration": formData.get("duration")?.toString() ?? ""
     });
-    const res = await fetch(`${env.CCTV_API_URL}/api/auth/stream/token?${queries.toString()}`, {
+    const res = await fetch(`${env.APP_API_URL}/api/auth/stream/token?${queries.toString()}`, {
         method: "POST",
         headers: {
             "Authorization": `Bearer ${jwt?.accessToken}`
@@ -25,7 +25,7 @@ export const POST: RequestHandler = async ({ cookies, fetch, request }) => {
     });
     if (res.ok) {
         queries.append("token", await res.text());
-        return new Response(`${env.CCTV_API_CLIENT_URL}/api/${formData.get("type")?.toString()}?${queries.toString()}`);
+        return new Response(`${env.APP_URL}/api/${formData.get("type")?.toString()}?${queries.toString()}`);
     } else {
         return new Response(res.statusText, {
             status: res.status,
