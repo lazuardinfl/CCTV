@@ -25,6 +25,9 @@ const config = {
 			serviceWorker: "ClientApp/service-worker",
 			appTemplate: "ClientApp/app.html",
 			errorTemplate: "ClientApp/error.html"
+		},
+		paths: {
+			base: "/web"
 		}
 	}
 };

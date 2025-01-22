@@ -9,6 +9,7 @@ declare module "@auth/core/jwt" {
 
 export const { handle, signIn, signOut } = SvelteKitAuth({
     debug: true,
+    trustHost: true,
     providers: [Keycloak],
     callbacks: {
         async jwt({ token, account }) {
