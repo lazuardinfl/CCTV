@@ -16,19 +16,37 @@
 
 <div class="account">
     {#if page.data.session?.user}
-        <p>{page.data.session.user.name}</p>
-        <div>
-            <SignOut signOutPage="{signOutRoute}" />
-        </div>
+        <p class="user">{page.data.session.user.name}</p>
+        <SignOut signOutPage="{signOutRoute}">
+            <div slot="submitButton">
+                <span class="auth">Log Out</span>
+            </div>
+        </SignOut>
     {:else}
-        <div>
-            <SignIn provider="keycloak" signInPage="{signInRoute}" />
-        </div>
+        <SignIn provider="keycloak" signInPage="{signInRoute}">
+            <div slot="submitButton">
+                <span class="auth">Log In</span>
+            </div>
+        </SignIn>
     {/if}
 </div>
 
 <style>
     .account {
-        float: right;
+        align-items: center;
+        display: flex;
+        font-family: Verdana, Geneva, Tahoma, sans-serif;
+        gap: 20px;
+    }
+
+    .auth {
+        font-size: large;
+        font-weight: bold;
+    }
+
+    .user {
+        color: white;
+        font-size: large;
+        margin: 0;
     }
 </style>

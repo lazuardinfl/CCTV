@@ -15,8 +15,16 @@
 {@render children()}
 
 <style>
+    :global(body) {
+        margin: 0;
+    }
+
     .topnav {
-        overflow: hidden;
-        background-color: #c1bcbc;
+        align-items: center;
+        background-color: black;
+        border-bottom: 4px solid white;
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 20px;
     }
 </style>
