@@ -16,13 +16,13 @@
 
 <style>
     :global(body) {
+        background-color: lightgray;
         margin: 0;
     }
 
     .topnav {
         align-items: center;
         background-color: black;
-        border-bottom: 4px solid white;
         display: flex;
         justify-content: space-between;
         padding: 10px 20px;
