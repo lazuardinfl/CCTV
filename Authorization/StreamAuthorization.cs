@@ -23,7 +23,7 @@ public class StreamHandler(StreamToken streamToken) : AuthorizationHandler<Strea
                 string duration = httpContext.Request.Query[requirement.Duration].ToString();
                 if ((await streamToken.ValidateToken(token)) &&
                     (cctv == streamToken.GetTokenClaim(token, requirement.CCTV)) &&
-                    IsDurationValid(duration, token, requirement.Duration))
+                    IsDurationValid(duration, streamToken.GetTokenClaim(token, requirement.Duration)))
                 {
                     context.Succeed(requirement);
                 }
@@ -33,18 +33,14 @@ public class StreamHandler(StreamToken streamToken) : AuthorizationHandler<Strea
         return Task.CompletedTask;
     }
 
-    private bool IsDurationValid(string duration, string token, string claimName)
+    private bool IsDurationValid(string duration, string? durationClaim)
     {
-        string? claim = streamToken.GetTokenClaim(token, claimName);
-        string[] normal = ["normal", "extended", "unlimited"];
-        string[] extended = ["extended", "unlimited"];
-        string[] unlimited = ["unlimited"];
-        return duration switch
+        var durations = new Dictionary<string, string[]>()
         {
-            "normal" => normal.Contains(claim),
-            "extended" => extended.Contains(claim),
-            "unlimited" => unlimited.Contains(claim),
-            _ => false,
+            { "normal", ["normal", "extended", "unlimited"] },
+            { "extended", ["extended", "unlimited"] },
+            { "unlimited", ["unlimited"] }
         };
+        return durations[duration].Contains(durationClaim);
     }
 }

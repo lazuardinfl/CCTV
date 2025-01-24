@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace CCTV.Authorization;
 
@@ -24,7 +25,7 @@ public class StreamRequestHandler() : AuthorizationHandler<StreamRequestRequirem
                 {
                     if (context.User.IsInRole(role))
                     {
-                        if (IsDurationValid(duration, role))
+                        if (IsDurationValid(duration, context.User))
                         {
                             context.Succeed(requirement);
                         }
@@ -37,16 +38,21 @@ public class StreamRequestHandler() : AuthorizationHandler<StreamRequestRequirem
         return Task.CompletedTask;
     }
 
-    private bool IsDurationValid(string duration, string role)
+    private bool IsDurationValid(string duration, ClaimsPrincipal user)
     {
-        string[] normal = ["normal"];
-        string[] extended = ["normal", "extended"];
-        return role switch
+        var durations = new Dictionary<string, string[]>()
         {
-            "super" => true,
-            "officer" => extended.Contains(duration),
-            string => normal.Contains(duration),
-            _ => false,
+            { "normal", ["normal", "extended", "unlimited", "super"] },
+            { "extended", ["extended", "unlimited", "super"] },
+            { "unlimited", ["unlimited", "super"] }
         };
+        foreach (string role in durations[duration])
+        {
+            if (user.IsInRole(role))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 }
