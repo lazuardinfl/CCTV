@@ -1,16 +1,19 @@
 import { env } from "$env/dynamic/private";
-import { decode } from "@auth/core/jwt";
+import { getToken } from "@auth/core/jwt";
 import type { RequestHandler } from "./$types";
 
 export const POST: RequestHandler = async ({ cookies, fetch, request }) => {
-    let authCookie = "__Secure-authjs.session-token";
-    if (!cookies.get(authCookie)) {
-        authCookie = "authjs.session-token";
+    let secureCookie = false;
+    for (const cookie of cookies.getAll()) {
+        if (cookie.name.includes("__Secure-authjs.session-token")) {
+            secureCookie = true;
+            break;
+        }
     }
-    const jwt = await decode({
-        salt: authCookie,
+    const jwt = await getToken({
+        req: request,
         secret: env.AUTH_SECRET,
-        token: cookies.get(authCookie)
+        secureCookie: secureCookie
     });
     const formData = await request.formData();
     const queries = new URLSearchParams({
