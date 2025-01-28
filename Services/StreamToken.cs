@@ -3,13 +3,15 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace CCTV.Services;
 
 public class StreamToken(IConfiguration configuration)
 {
-    private readonly SecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["STREAM_SECRET"] ??
-        RandomNumberGenerator.GetString("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", 512)));
+    private readonly SecurityKey key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+        Regex.IsMatch(configuration["App:Secret"]!, "^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{256,}$") ?
+        configuration["App:Secret"]! : RandomNumberGenerator.GetString("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", 512)));
 
     public string GenerateToken(DateTime expires, ClaimsIdentity claims)
     {

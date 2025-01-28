@@ -1,5 +1,6 @@
 using CCTV.Authorization;
 using CCTV.Services;
+using DotNetEnv.Configuration;
 using Keycloak.AuthServices.Authentication;
 using Keycloak.AuthServices.Authorization;
 using Keycloak.AuthServices.Common;
@@ -15,6 +16,8 @@ public class Program
         var builder = WebApplication.CreateBuilder(args);
         var configuration = builder.Configuration;
         var services = builder.Services;
+
+        configuration.AddDotNetEnv();
 
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddKeycloakWebApi(options => {
