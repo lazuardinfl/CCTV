@@ -32,3 +32,36 @@ USER app:app
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "CCTV.dll"]
 ### END PROD DOTNET
+
+### START BUILD NODE.JS
+FROM node:20.18.2-slim AS build-node
+
+WORKDIR /app
+COPY package*.json .
+RUN npm ci
+COPY . .
+RUN npm run build
+RUN npm prune --production
+### END BUILD NODE.JS
+
+### START PROD NODE.JS
+FROM node:20.18.2-slim AS prod-node
+
+ENV NODE_ENV=production
+
+# install custom root CA
+RUN apt-get update && apt-get install --no-install-recommends -y ca-certificates \
+    && apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+COPY ca/* /usr/local/share/ca-certificates/
+RUN update-ca-certificates
+
+# copy app files
+WORKDIR /app
+COPY --chown=node:node package.json .
+COPY --from=build-node --chown=node:node /app/build build/
+COPY --from=build-node --chown=node:node /app/node_modules node_modules/
+
+USER node:node
+EXPOSE 3000
+CMD ["node", "build"]
+### END PROD NODE.JS
