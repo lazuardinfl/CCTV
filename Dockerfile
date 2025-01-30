@@ -36,6 +36,8 @@ ENTRYPOINT ["dotnet", "CCTV.dll"]
 ### START BUILD NODE.JS
 FROM node:20.18.2-slim AS build-node
 
+ARG SVELTE_PATH_BASE
+
 WORKDIR /app
 COPY package*.json .
 RUN npm ci
@@ -48,6 +50,7 @@ RUN npm prune --production
 FROM node:20.18.2-slim AS prod-node
 
 ENV NODE_ENV=production
+ENV AUTH_KEYCLOAK_ISSUER=https://www.keycloak.org/realms/name
 
 # install custom root CA
 RUN apt-get update && apt-get install --no-install-recommends -y ca-certificates \
