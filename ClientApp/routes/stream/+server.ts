@@ -1,4 +1,5 @@
 import { env } from "$env/dynamic/private";
+import { authSecret } from "$lib/auth";
 import { getToken } from "@auth/core/jwt";
 import type { RequestHandler } from "./$types";
 
@@ -12,7 +13,7 @@ export const POST: RequestHandler = async ({ cookies, fetch, request }) => {
     }
     const jwt = await getToken({
         req: request,
-        secret: env.AUTH_SECRET,
+        secret: authSecret,
         secureCookie: secureCookie
     });
     const formData = await request.formData();

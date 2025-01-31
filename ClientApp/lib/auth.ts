@@ -9,7 +9,7 @@ declare module "@auth/core/jwt" {
     }
 }
 
-function getAuthSecret(): string {
+export const authSecret = (() => {
     const regex = /^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9]).{256,}$/;
     if (regex.test(env.AUTH_SECRET ?? "empty")) {
         return env.AUTH_SECRET!;
@@ -18,13 +18,13 @@ function getAuthSecret(): string {
         const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         return Array.from(crypto.getRandomValues(new Uint32Array(length))).map((x) => chars[x % chars.length]).join("");
     }
-}
+})();
 
 export const { handle, signIn, signOut } = SvelteKitAuth({
     debug: env.NODE_ENV !== "production",
     trustHost: true,
     providers: [Keycloak],
-    secret: getAuthSecret(),
+    secret: authSecret,
     callbacks: {
         async jwt({ account, token }) {
             if (account) {
