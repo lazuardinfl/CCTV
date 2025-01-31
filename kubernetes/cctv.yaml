@@ -1,0 +1,192 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cctv-config
+  labels:
+    app.kubernetes.io/name: cctv
+data:
+  go2rtc: |-
+    streams:
+      192.168.1.10:
+        - rtsp://${RTSP_AUTH}@192.168.1.10:554/profile1/media.smp
+        - rtsp://${RTSP_AUTH}@192.168.1.10:554/profile2/media.smp
+      192.168.1.20:
+        - rtsp://${RTSP_AUTH}@192.168.1.20:554/profile1/media.smp
+        - rtsp://${RTSP_AUTH}@192.168.1.20:554/profile2/media.smp
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: cctv-secret
+  labels:
+    app.kubernetes.io/name: cctv
+  annotations:
+    avp.kubernetes.io/path: secret/data/system/cctv
+type: Opaque
+data:
+  KEYCLOAK_SECRET: <keycloak_secret | base64encode>
+  RTSP_AUTH: <rtsp_auth | base64encode>
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cctv
+  labels:
+    app.kubernetes.io/name: cctv
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: cctv
+  ports:
+  - name: api
+    port: 8080
+    targetPort: api
+  - name: web
+    port: 3000
+    targetPort: web
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cctv-api
+  labels:
+    app: cctv-api
+    app.kubernetes.io/name: cctv
+  annotations:
+    configmap.reloader.stakater.com/reload: cctv-config
+    secret.reloader.stakater.com/reload: cctv-secret
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cctv-api
+      app.kubernetes.io/name: cctv
+  template:
+    metadata:
+      labels:
+        app: cctv-api
+        app.kubernetes.io/name: cctv
+    spec:
+      containers:
+        - name: api
+          image: lazuardinfl/cctv-api:1.0.0
+          env:
+            - name: Keycloak__auth-server-url
+              value: https://domain.keycloak.com
+            - name: Keycloak__realm
+              value: realm-name
+            - name: Keycloak__resource
+              value: client-id
+            - name: Keycloak__credentials__secret
+              valueFrom:
+                secretKeyRef:
+                  key: KEYCLOAK_SECRET
+                  name: cctv-secret
+          ports:
+            - name: api
+              containerPort: 8080
+          resources: {}
+        - name: go2rtc
+          image: alexxit/go2rtc:1.9.8
+          envFrom:
+            - secretRef:
+                name: cctv-secret
+          ports:
+            - name: go2rtc
+              containerPort: 1984
+          volumeMounts:
+            - name: config
+              mountPath: /config/go2rtc.yaml
+              subPath: go2rtc
+          resources: {}
+      imagePullSecrets:
+        - name: regcred
+      volumes:
+        - name: config
+          configMap:
+            name: cctv-config
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cctv-web
+  labels:
+    app: cctv-web
+    app.kubernetes.io/name: cctv
+  annotations:
+    secret.reloader.stakater.com/reload: cctv-secret
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cctv-web
+      app.kubernetes.io/name: cctv
+  template:
+    metadata:
+      labels:
+        app: cctv-web
+        app.kubernetes.io/name: cctv
+    spec:
+      containers:
+        - name: web
+          image: lazuardinfl/cctv-web:1.0.0
+          env:
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: APP_URL
+              value: https://cctv.domain.com
+            - name: APP_API_URL
+              value: http://cctv.$(POD_NAMESPACE):8080
+            - name: AUTH_KEYCLOAK_ISSUER
+              value: https://www.keycloak.org/realms/name
+            - name: AUTH_KEYCLOAK_ID
+              value: client-id
+            - name: AUTH_KEYCLOAK_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: KEYCLOAK_SECRET
+                  name: cctv-secret
+          ports:
+            - name: web
+              containerPort: 3000
+          resources: {}
+      imagePullSecrets:
+        - name: regcred
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: cctv-ingress
+  labels:
+    app.kubernetes.io/name: cctv
+  annotations:
+    cert-manager.io/cluster-issuer: issuer
+    haproxy.org/backend-config-snippet: |
+      acl web path /
+      http-request redirect code 302 prefix /web if web
+spec:
+  ingressClassName: haproxy
+  tls:
+    - hosts:
+        - cctv.domain.com
+      secretName: cctv-tls
+  rules:
+  - host: cctv.domain.com
+    http:
+      paths:
+      - path: /web
+        pathType: Prefix
+        backend:
+          service:
+            name: cctv
+            port:
+              name: web
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: cctv
+            port:
+              name: api
