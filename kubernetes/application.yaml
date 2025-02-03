@@ -1,0 +1,113 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cctv
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: cctv
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: <ns>
+  source:
+    repoURL: <https://repo.url>
+    path: kubernetes
+    targetRevision: HEAD
+  sources:
+    - repoURL: <https://repo.url>
+      path: kubernetes
+      targetRevision: HEAD
+    - repoURL: <https://repo.url>
+      path: kubernetes
+      targetRevision: HEAD
+      kustomize:
+        namespace: <ns>
+        patches:
+          - patch: |-
+              $patch: delete
+              apiVersion: v1
+              kind: Secret
+              metadata:
+                name: cctv-secret
+          - patch: |-
+              apiVersion: v1
+              kind: ConfigMap
+              metadata:
+                name: cctv-config
+              data:
+                go2rtc: |-
+                  streams:
+                    192.168.1.2:
+                      - rtsp://${RTSP_AUTH}@192.168.1.2:554/profile1/media.smp
+                      - rtsp://${RTSP_AUTH}@192.168.1.2:554/profile2/media.smp
+                    192.168.1.3:
+                      - rtsp://${RTSP_AUTH}@192.168.1.3:554/profile1/media.smp
+                      - rtsp://${RTSP_AUTH}@192.168.1.3:554/profile2/media.smp
+          - patch: |-
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: cctv-api
+              spec:
+                template:
+                  spec:
+                    containers:
+                      - name: api
+                        image: <registry.private/repo/cctv-api:1.0.0>
+                        env:
+                          - name: Keycloak__auth-server-url
+                            value: <https://domain.keycloak.com>
+                          - name: Keycloak__realm
+                            value: <realm-name>
+                          - name: Keycloak__resource
+                            value: <client-id>
+                      - name: go2rtc
+                        image: <registry.private/alexxit/go2rtc:1.9.8>
+                    imagePullSecrets:
+                      - name: <secret>
+                    nodeSelector:
+                      kubernetes.io/hostname: <node-name>
+          - patch: |-
+              apiVersion: apps/v1
+              kind: Deployment
+              metadata:
+                name: cctv-web
+              spec:
+                template:
+                  spec:
+                    containers:
+                      - name: web
+                        image: <registry.private/repo/cctv-web:1.0.0>
+                        env:
+                          - name: APP_URL
+                            value: <https://cctv.domain.com>
+                          - name: AUTH_KEYCLOAK_ISSUER
+                            value: <https://www.keycloak.org/realms/name>
+                          - name: AUTH_KEYCLOAK_ID
+                            value: <client-id>
+                          - name: NODE_OPTIONS
+                            value: <--use-openssl-ca>
+                    imagePullSecrets:
+                      - name: <secret>
+                    nodeSelector:
+                      kubernetes.io/hostname: <node-name>
+          - patch: |-
+              apiVersion: networking.k8s.io/v1
+              kind: Ingress
+              metadata:
+                name: cctv-ingress
+                annotations:
+                  cert-manager.io/cluster-issuer: <issuer-name>
+          - patch: |-
+              - op: replace
+                path: /spec/tls/0/hosts/0
+                value: <cctv.domain.com>
+              - op: replace
+                path: /spec/rules/0/host
+                value: <cctv.domain.com>
+            target:
+              kind: Ingress
+              name: cctv-ingress
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=true
